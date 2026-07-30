@@ -214,7 +214,7 @@ export default function StitchShell({ children }: { children: React.ReactNode })
           <header className="flex min-h-16 w-full items-start md:items-center justify-between gap-2 px-4 py-4 md:px-6 md:py-0 shrink-0 z-40">
             <div className="flex flex-col gap-1 md:gap-0.5">
               <h2 className="font-[var(--font-sora)] text-[18px] md:text-[24px] font-bold leading-tight md:leading-normal">
-                {greeting},<br className="md:hidden" /> {isConnected ? "trader" : "Olivia"} 👋
+                {greeting},<br className="md:hidden" /> {isConnected ? "trader" : "Trader"} 👋
               </h2>
               <p className="text-[12px] md:text-[14px] leading-tight text-[var(--m3-on-surface-variant)]">
                 Your AI trading assistant is ready.

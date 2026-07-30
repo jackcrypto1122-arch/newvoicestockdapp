@@ -460,7 +460,7 @@ export default function StitchUi() {
           <header className="flex h-16 w-full items-center justify-between px-6 shrink-0 z-40">
             <div>
               <h2 className="font-[var(--font-sora)] text-[24px] font-bold">
-                {greeting}, {isConnected ? "trader" : "Olivia"} 👋
+                {greeting}, {isConnected ? "trader" : "Trader"} 👋
               </h2>
               <p className="mt-0.5 text-[14px] leading-none text-[var(--m3-on-surface-variant)]">
                 Your AI trading assistant is ready.
