@@ -1,0 +1,94 @@
+"use client";
+
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { ARROW_ADDRESS, ETH_ADDRESS } from "@/lib/constants";
+import type { ExecutionStatus, TokenInfo, VoiceIntent } from "@/types/dapp";
+
+type OraculumState = {
+  swapInputAddress: string;
+  swapOutputAddress: string;
+  swapAmount: string;
+  slippageBps: number;
+  priorityFee: "auto" | "low" | "medium" | "high";
+  lastIntent?: VoiceIntent;
+  voiceReviewRequired: boolean;
+  queuedVoiceCommand?: "confirm" | "cancel";
+  voiceCommandVersion: number;
+  executions: ExecutionStatus[];
+  customTokens: TokenInfo[];
+  setSwapPair: (inputAddress: string, outputAddress: string) => void;
+  setSwapAmount: (amount: string) => void;
+  setSlippage: (slippageBps: number) => void;
+  setPriorityFee: (priorityFee: OraculumState["priorityFee"]) => void;
+  setLastIntent: (intent?: VoiceIntent) => void;
+  setVoiceReviewRequired: (voiceReviewRequired: boolean) => void;
+  queueVoiceCommand: (command: "confirm" | "cancel") => void;
+  clearQueuedVoiceCommand: () => void;
+  upsertExecution: (execution: ExecutionStatus) => void;
+  upsertCustomToken: (token: TokenInfo) => void;
+};
+
+export const useOraculumStore = create<OraculumState>()(
+  persist(
+    (set) => ({
+      swapInputAddress: ETH_ADDRESS,
+      swapOutputAddress: ARROW_ADDRESS,
+      swapAmount: "1",
+      slippageBps: 250,
+      priorityFee: "auto",
+      voiceReviewRequired: false,
+      voiceCommandVersion: 0,
+      executions: [],
+      customTokens: [],
+      setSwapPair: (swapInputAddress, swapOutputAddress) =>
+        set({ swapInputAddress, swapOutputAddress }),
+      setSwapAmount: (swapAmount) => set({ swapAmount }),
+      setSlippage: (slippageBps) => set({ slippageBps }),
+      setPriorityFee: (priorityFee) => set({ priorityFee }),
+      setLastIntent: (lastIntent) => set({ lastIntent }),
+      setVoiceReviewRequired: (voiceReviewRequired) => set({ voiceReviewRequired }),
+      queueVoiceCommand: (queuedVoiceCommand) =>
+        set((state) => ({
+          queuedVoiceCommand,
+          voiceCommandVersion: state.voiceCommandVersion + 1,
+        })),
+      clearQueuedVoiceCommand: () => set({ queuedVoiceCommand: undefined }),
+      upsertExecution: (execution) =>
+        set((state) => ({
+          executions: [
+            execution,
+            ...state.executions.filter((entry) => entry.hash !== execution.hash),
+          ].slice(0, 20),
+        })),
+      upsertCustomToken: (token) =>
+        set((state) => ({
+          customTokens: [
+            token,
+            ...state.customTokens.filter(
+              (entry) => entry.address.toLowerCase() !== token.address.toLowerCase(),
+            ),
+          ].slice(0, 20),
+        })),
+    }),
+    {
+      name: "oraculum-state",
+      version: 1,
+      migrate: (persistedState, version) => {
+        const state = persistedState as OraculumState;
+        return version < 1 && state.slippageBps === 50 ? { ...state, slippageBps: 250 } : state;
+      },
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        swapInputAddress: state.swapInputAddress,
+        swapOutputAddress: state.swapOutputAddress,
+        swapAmount: state.swapAmount,
+        slippageBps: state.slippageBps,
+        priorityFee: state.priorityFee,
+        executions: state.executions,
+        lastIntent: state.lastIntent,
+        customTokens: state.customTokens,
+      }),
+    },
+  ),
+);
